@@ -1,0 +1,46 @@
+name: Publish portfolio at root
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/sync-portfolio.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout root GitHub Pages repository
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Checkout portfolio source
+        uses: actions/checkout@v4
+        with:
+          repository: aminemtar/mtar-portfolio
+          ref: gh-pages
+          path: portfolio
+
+      - name: Copy website files to root
+        run: |
+          rsync -a --delete --exclude='.git' --exclude='app-ads.txt' portfolio/ ./
+          sed -i 's|/mtar-portfolio/|/|g' index.html
+          test -f app-ads.txt
+          grep -Fx 'google.com, pub-4021258091901741, DIRECT, f08c47fec0942fa0' app-ads.txt
+
+      - name: Commit and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "No changes to publish"
+          else
+            git commit -m "Publish portfolio website at root"
+            git push origin HEAD:main
+          fi
