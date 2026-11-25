@@ -28,7 +28,8 @@ jobs:
 
       - name: Copy website files to root
         run: |
-          rsync -a --delete --exclude='.git' --exclude='.github' --exclude='app-ads.txt' portfolio/ ./
+          tar -C portfolio --exclude='.git' --exclude='app-ads.txt' -cf - . | tar -xf - -C .
+          rm -rf portfolio
           sed -i 's|/mtar-portfolio/|/|g' index.html
           test -f app-ads.txt
           grep -Fx 'google.com, pub-4021258091901741, DIRECT, f08c47fec0942fa0' app-ads.txt
